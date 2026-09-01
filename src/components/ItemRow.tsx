@@ -1,5 +1,4 @@
-import { useRef, useState } from 'react'
-import type { PointerEvent as ReactPointerEvent } from 'react'
+import { useState } from 'react'
 import type { Item, Priority } from '../types'
 import { formatTime, relativeLabel } from '../lib/dates'
 import { toggleDone, deleteItem } from '../lib/store'
@@ -27,35 +26,20 @@ interface Props {
 }
 
 export function ItemRow({ item, onEdit, showDate = false, emphasizeMeta = false }: Props) {
-  const [dx, setDx] = useState(0)
   const [reminderOn, setReminderOn] = useState(() => hasReminder(item.id))
   const [hint, setHint] = useState<string | null>(null)
-  const startX = useRef<number | null>(null)
-  const dragging = useRef(false)
 
   const canRemind = Boolean(item.time) && (reminderTime(item) ?? 0) > Date.now()
-
-  function onPointerDown(e: ReactPointerEvent) {
-    if (e.pointerType === 'mouse') return
-    startX.current = e.clientX
-    dragging.current = true
-  }
-  function onPointerMove(e: ReactPointerEvent) {
-    if (!dragging.current || startX.current === null) return
-    const delta = e.clientX - startX.current
-    // Only reveal on left-swipe, cap the travel.
-    setDx(Math.max(-96, Math.min(0, delta)))
-  }
-  function endDrag() {
-    if (!dragging.current) return
-    dragging.current = false
-    startX.current = null
-    setDx((d) => (d < -56 ? -80 : 0))
-  }
 
   async function onToggle() {
     if (navigator.vibrate) navigator.vibrate(8)
     await toggleDone(item)
+  }
+
+  async function onDelete() {
+    if (item.id == null) return
+    if (navigator.vibrate) navigator.vibrate(12)
+    await deleteItem(item.id)
   }
 
   async function onToggleReminder(e: React.MouseEvent) {
@@ -80,28 +64,10 @@ export function ItemRow({ item, onEdit, showDate = false, emphasizeMeta = false 
     }
   }
 
-  const revealed = dx < 0
-
   return (
-    <li className="relative overflow-hidden">
-      {/* delete affordance behind the row */}
-      <button
-        type="button"
-        aria-label={`Delete ${item.title}`}
-        onClick={() => item.id != null && deleteItem(item.id)}
-        className="absolute inset-y-0 right-0 flex w-20 items-center justify-center text-prio-high"
-        style={{ opacity: revealed ? 1 : 0 }}
-      >
-        <TrashIcon />
-      </button>
-
+    <li className="relative">
       <div
-        className="flex items-start gap-3 bg-ink-850 py-3.5 pr-4 pl-1 transition-transform duration-200"
-        style={{ transform: `translateX(${dx}px)` }}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
+        className="flex items-start gap-3 bg-ink-850 py-3.5 pr-4 pl-1"
       >
         {/* priority rule */}
         <span
@@ -178,8 +144,26 @@ export function ItemRow({ item, onEdit, showDate = false, emphasizeMeta = false 
             <BellIcon filled={reminderOn} />
           </button>
         )}
+
+        {/* discreet delete */}
+        <button
+          type="button"
+          onClick={onDelete}
+          aria-label={`Delete ${item.title}`}
+          className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full text-mist-600 transition-colors active:bg-ink-700 active:text-prio-high"
+        >
+          <CloseIcon />
+        </button>
       </div>
     </li>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+    </svg>
   )
 }
 
@@ -187,17 +171,6 @@ function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={3}>
       <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  )
-}
-function TrashIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path
-        d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0l1 12a1 1 0 001 1h6a1 1 0 001-1l1-12"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
     </svg>
   )
 }
