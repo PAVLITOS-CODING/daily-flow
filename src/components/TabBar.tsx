@@ -28,11 +28,11 @@ export function TabBar({ active, onChange }: Props) {
               onClick={() => onChange(t.key)}
               aria-current={isActive ? 'page' : undefined}
               className={`relative flex flex-1 flex-col items-center gap-1 pt-2.5 pb-2 transition-colors ${
-                isActive ? 'text-flow' : 'text-mist-600'
+                isActive ? 'text-accentink' : 'text-mist-600'
               }`}
             >
               {isActive && (
-                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-flow" aria-hidden />
+                <span className="absolute top-0 h-0.5 w-8 rounded-full bg-accentink" aria-hidden />
               )}
               {t.icon(isActive)}
               <span className="text-[11px] font-medium tracking-wide">{t.label}</span>

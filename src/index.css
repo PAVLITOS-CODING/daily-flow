@@ -18,8 +18,12 @@
   --color-mist-500: #8a8a97;
   --color-mist-600: #6a6a77;
 
-  --color-flow: #cde86b; /* chartreuse — the app's signature */
+  --color-flow: #cde86b; /* chartreuse — the app's signature fill */
   --color-flow-dim: #9aad4f;
+  /* accent used AS text/icon/border — stays legible on either ground */
+  --color-accentink: #cde86b;
+  /* dark text that always sits on a chartreuse fill */
+  --color-onaccent: #0b0b0d;
 
   --color-prio-high: #ff6d57;
   --color-prio-med: #f4b740;
@@ -34,6 +38,26 @@
 
 :root {
   color-scheme: dark;
+}
+
+/* ---- Light theme: remap the surface/text tokens, keep a readable accent ---- */
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --color-ink-900: #ffffff; /* bars, lock screen */
+  --color-ink-850: #f4f4f7; /* app ground */
+  --color-ink-800: #ffffff; /* sheets, cards */
+  --color-ink-700: #eaeaef; /* inputs, dividers */
+  --color-ink-600: #dcdce2; /* borders, empty grid cells */
+  --color-ink-500: #bcbcc6; /* medium: switch-off, handles, selected pill */
+
+  --color-mist-100: #17171b; /* primary text */
+  --color-mist-300: #3c3c45;
+  --color-mist-500: #6c6c78;
+  --color-mist-600: #9797a2;
+
+  --color-flow-dim: #55731a;
+  --color-accentink: #44600d; /* deep green — good contrast on white */
 }
 
 html,

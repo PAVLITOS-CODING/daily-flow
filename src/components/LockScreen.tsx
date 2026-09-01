@@ -45,8 +45,8 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink-900 px-6">
-      <div className="mb-6 grid size-20 place-items-center rounded-3xl bg-ink-800">
-        <svg viewBox="0 0 24 24" className="size-9 text-flow" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <div className="mb-6 grid size-20 place-items-center rounded-3xl bg-ink-700">
+        <svg viewBox="0 0 24 24" className="size-9 text-accentink" fill="none" stroke="currentColor" strokeWidth={1.8}>
           <rect x="5" y="11" width="14" height="9" rx="2" />
           <path d="M8 11V8a4 4 0 118 0v3" strokeLinecap="round" />
         </svg>

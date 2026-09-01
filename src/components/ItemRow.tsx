@@ -86,7 +86,7 @@ export function ItemRow({ item, onEdit, showDate = false, emphasizeMeta = false 
           onClick={onToggle}
           className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border transition-colors ${
             item.done
-              ? 'border-flow bg-flow text-ink-900'
+              ? 'border-flow bg-flow text-onaccent'
               : 'border-ink-500 text-transparent active:border-mist-500'
           }`}
         >
@@ -138,7 +138,7 @@ export function ItemRow({ item, onEdit, showDate = false, emphasizeMeta = false 
             aria-label={reminderOn ? 'Turn reminder off' : 'Turn reminder on'}
             aria-pressed={reminderOn}
             className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full transition-colors ${
-              reminderOn ? 'text-flow' : 'text-mist-600 active:text-mist-300'
+              reminderOn ? 'text-accentink' : 'text-mist-600 active:text-mist-300'
             }`}
           >
             <BellIcon filled={reminderOn} />

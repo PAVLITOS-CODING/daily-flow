@@ -62,7 +62,7 @@ function Key({
       type="button"
       onClick={onClick}
       {...rest}
-      className="grid size-20 place-items-center rounded-full bg-ink-800/70 font-[family-name:var(--font-display)] text-3xl text-mist-100 transition-colors active:bg-ink-600"
+      className="grid size-20 place-items-center rounded-full bg-ink-700 font-[family-name:var(--font-display)] text-3xl text-mist-100 transition-colors active:bg-ink-600"
     >
       {children}
     </button>
@@ -79,7 +79,7 @@ function BackIcon() {
 }
 function FaceIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="size-8 text-flow" fill="none" stroke="currentColor" strokeWidth={1.7}>
+    <svg viewBox="0 0 24 24" className="size-8 text-accentink" fill="none" stroke="currentColor" strokeWidth={1.7}>
       <path d="M4 8V6a2 2 0 012-2h2M16 4h2a2 2 0 012 2v2M20 16v2a2 2 0 01-2 2h-2M8 20H6a2 2 0 01-2-2v-2" strokeLinecap="round" />
       <path d="M9 10v1M15 10v1M12 9v4l-1 1M9.5 15c1.5 1 3.5 1 5 0" strokeLinecap="round" strokeLinejoin="round" />
     </svg>

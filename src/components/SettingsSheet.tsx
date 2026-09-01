@@ -11,12 +11,14 @@ import {
 } from '../lib/lock'
 import { APP_VERSION_LABEL } from '../version'
 import { Switch } from './Switch'
+import { loadTheme, setTheme, type ThemePref } from '../lib/theme'
 
 const PIN_LEN = 4
 
 type Step = 'menu' | 'set' | 'confirm'
 
 export function SettingsSheet({ onClose }: { onClose: () => void }) {
+  const [theme, setThemeState] = useState<ThemePref>(loadTheme())
   const [lockOn, setLockOn] = useState(isLockEnabled())
   const [bioOn, setBioOn] = useState(isBiometricEnabled())
   const [bioSupported, setBioSupported] = useState(false)
@@ -94,7 +96,7 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
   const inSetup = step !== 'menu'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/70 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
         className="animate-rise w-full max-w-lg rounded-t-3xl border-t border-ink-600 bg-ink-800 px-5 pt-3"
         style={{ paddingBottom: 'calc(1.5rem + var(--safe-bottom))' }}
@@ -130,6 +132,31 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <>
+            <h2 className="mb-3 font-[family-name:var(--font-display)] text-lg font-bold text-mist-100">
+              Εμφάνιση
+            </h2>
+            <div className="mb-6 flex overflow-hidden rounded-xl bg-ink-700 p-1">
+              {([
+                ['system', 'Auto'],
+                ['light', 'Φωτεινό'],
+                ['dark', 'Σκούρο'],
+              ] as [ThemePref, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => {
+                    setTheme(value)
+                    setThemeState(value)
+                  }}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${
+                    theme === value ? 'bg-flow text-onaccent' : 'text-mist-500'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
             <h2 className="mb-4 font-[family-name:var(--font-display)] text-lg font-bold text-mist-100">
               Ασφάλεια
             </h2>

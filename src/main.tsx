@@ -5,6 +5,10 @@ import '@fontsource-variable/space-grotesk'
 import './index.css'
 import App from './App.tsx'
 import { requestPersistentStorage } from './lib/persist.ts'
+import { initTheme } from './lib/theme.ts'
+
+// Apply the saved light/dark theme before first paint.
+initTheme()
 
 // autoUpdate: fetch and apply new versions in the background.
 registerSW({ immediate: true })

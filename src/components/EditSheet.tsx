@@ -52,7 +52,7 @@ export function EditSheet({ item, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink-900/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -157,7 +157,7 @@ export function EditSheet({ item, onClose }: Props) {
             type="button"
             onClick={save}
             disabled={draft.title.trim().length === 0}
-            className="flex-1 rounded-xl bg-flow py-3 font-semibold text-ink-900 transition-opacity disabled:opacity-30"
+            className="flex-1 rounded-xl bg-flow py-3 font-semibold text-onaccent transition-opacity disabled:opacity-30"
           >
             Save
           </button>

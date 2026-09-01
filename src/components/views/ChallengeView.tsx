@@ -80,7 +80,7 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
       </div>
 
       {stats.finished && (
-        <p className="mt-3 rounded-xl bg-flow/15 px-3 py-2 text-center text-sm font-medium text-flow">
+        <p className="mt-3 rounded-xl bg-flow/15 px-3 py-2 text-center text-sm font-medium text-accentink">
           🎉 Ολοκληρώθηκε! {challenge.targetDays} μέρες σερί.
         </p>
       )}
@@ -111,7 +111,7 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
               >
                 <span
                   className={`grid size-6 shrink-0 place-items-center rounded-full border transition-colors ${
-                    done ? 'border-flow bg-flow text-ink-900' : 'border-ink-500 text-transparent'
+                    done ? 'border-flow bg-flow text-onaccent' : 'border-ink-500 text-transparent'
                   }`}
                 >
                   <svg viewBox="0 0 24 24" className="size-4" fill="none" stroke="currentColor" strokeWidth={3}>
@@ -214,7 +214,7 @@ function DayGrid({ target, streak, todayComplete }: { target: number; streak: nu
           <div
             key={i}
             className={`aspect-square rounded-[3px] ${
-              done ? 'bg-flow' : current ? 'bg-transparent ring-1 ring-flow' : 'bg-ink-600'
+              done ? 'bg-accentink' : current ? 'bg-transparent ring-1 ring-accentink' : 'bg-ink-600'
             }`}
           />
         )
@@ -285,7 +285,7 @@ function Chooser() {
           <span className="font-[family-name:var(--font-display)] text-lg font-bold text-mist-100">
             {SEVENTY_FIVE_HARD.title}
           </span>
-          <span className="rounded-full bg-flow px-3 py-1 text-xs font-semibold text-ink-900">Ξεκίνα</span>
+          <span className="rounded-full bg-flow px-3 py-1 text-xs font-semibold text-onaccent">Ξεκίνα</span>
         </div>
         <p className="mt-1 text-xs text-mist-500">
           {SEVENTY_FIVE_HARD.rules.length} κανόνες · {SEVENTY_FIVE_HARD.targetDays} συνεχόμενες μέρες
@@ -380,7 +380,7 @@ function CustomBuilder({ onCancel }: { onCancel: () => void }) {
       <button
         type="button"
         onClick={addRule}
-        className="mt-2 text-sm text-flow-dim active:text-flow"
+        className="mt-2 text-sm text-flow-dim active:text-accentink"
       >
         + Κανόνας
       </button>
@@ -397,7 +397,7 @@ function CustomBuilder({ onCancel }: { onCancel: () => void }) {
           type="button"
           onClick={start}
           disabled={!canStart}
-          className="flex-1 rounded-xl bg-flow py-2.5 text-sm font-semibold text-ink-900 transition-opacity disabled:opacity-30"
+          className="flex-1 rounded-xl bg-flow py-2.5 text-sm font-semibold text-onaccent transition-opacity disabled:opacity-30"
         >
           Ξεκίνα
         </button>

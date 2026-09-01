@@ -60,7 +60,7 @@ export function QuickAdd({ view, defaultDate }: Props) {
           type="submit"
           disabled={!canSubmit}
           aria-label="Add"
-          className="grid size-9 shrink-0 place-items-center rounded-full bg-flow text-ink-900 transition-opacity disabled:opacity-30"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-flow text-onaccent transition-opacity disabled:opacity-30"
         >
           <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
