@@ -11,6 +11,7 @@ import {
   newRuleId,
 } from '../../lib/challenge'
 import { useActiveChallenge } from '../../hooks/useChallenge'
+import { Switch } from '../Switch'
 import {
   loadChallengeReminder,
   enableChallengeReminder,
@@ -180,17 +181,7 @@ function DailyReminderControl({ title }: { title: string }) {
               className="rounded-lg bg-ink-700 px-2 py-1 text-sm text-mist-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-flow/50"
             />
           )}
-          <button
-            type="button"
-            role="switch"
-            aria-checked={on}
-            onClick={() => void toggle()}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-flow' : 'bg-ink-500'}`}
-          >
-            <span
-              className={`absolute top-0.5 size-6 rounded-full bg-white transition-transform ${on ? 'translate-x-5' : 'translate-x-0.5'}`}
-            />
-          </button>
+          <Switch on={on} onChange={() => void toggle()} label="Ημερήσια υπενθύμιση" />
         </div>
       </div>
       {hint && <p className="mt-2 text-xs text-prio-med">{hint}</p>}

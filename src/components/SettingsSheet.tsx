@@ -10,6 +10,7 @@ import {
   disableBiometric,
 } from '../lib/lock'
 import { APP_VERSION_LABEL } from '../version'
+import { Switch } from './Switch'
 
 const PIN_LEN = 4
 
@@ -202,18 +203,7 @@ function Row({
         <p className="text-sm text-mist-100">{title}</p>
         <p className="text-xs text-mist-600">{subtitle}</p>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={on}
-        aria-label={title}
-        onClick={onToggle}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-flow' : 'bg-ink-500'}`}
-      >
-        <span
-          className={`absolute top-0.5 size-6 rounded-full bg-white transition-transform ${on ? 'translate-x-5' : 'translate-x-0.5'}`}
-        />
-      </button>
+      <Switch on={on} onChange={onToggle} label={title} />
     </div>
   )
 }
