@@ -9,6 +9,7 @@ const TABS: { key: ViewKind; label: string; icon: (active: boolean) => React.Rea
   { key: 'today', label: 'Today', icon: (a) => <SunIcon active={a} /> },
   { key: 'upcoming', label: 'Upcoming', icon: (a) => <StackIcon active={a} /> },
   { key: 'meetings', label: 'Meetings', icon: (a) => <PeopleIcon active={a} /> },
+  { key: 'challenge', label: 'Challenge', icon: (a) => <FlameIcon active={a} /> },
 ]
 
 export function TabBar({ active, onChange }: Props) {
@@ -63,6 +64,17 @@ function PeopleIcon({ active }: { active: boolean }) {
     <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}>
       <circle cx="9" cy="8" r="3" />
       <path d="M3.5 19a5.5 5.5 0 0111 0M16 6a3 3 0 010 6M17 19a5.5 5.5 0 00-2-4.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function FlameIcon({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 1.4 : 1.8}>
+      <path
+        d="M12 3c1 3-2 4-2 7a2 2 0 104 0c0-1 0-1.5-.5-2.5C15 10 17 12.5 17 15a5 5 0 11-10 0c0-3 2.5-4.5 3-7 .3-1.5 1.3-3.5 2-5z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }

@@ -7,11 +7,13 @@ import { EditSheet } from './components/EditSheet'
 import { TodayView } from './components/views/TodayView'
 import { UpcomingView } from './components/views/UpcomingView'
 import { MeetingsView } from './components/views/MeetingsView'
+import { ChallengeView } from './components/views/ChallengeView'
 
 const TITLES: Record<ViewKind, string> = {
   today: 'Today',
   upcoming: 'Upcoming',
   meetings: 'Meetings',
+  challenge: 'Challenge',
 }
 
 export default function App() {
@@ -31,7 +33,11 @@ export default function App() {
         style={{ paddingTop: 'calc(0.75rem + var(--safe-top))' }}
       >
         <p className="text-xs font-medium tracking-widest text-flow-dim uppercase">
-          {view === 'today' ? longDate : relativeLabel(todayISO())}
+          {view === 'today'
+            ? longDate
+            : view === 'challenge'
+              ? 'Μείνε συνεπής'
+              : relativeLabel(todayISO())}
         </p>
         <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-mist-100">
           {TITLES[view]}
@@ -42,9 +48,10 @@ export default function App() {
         {view === 'today' && <TodayView onEdit={setEditing} />}
         {view === 'upcoming' && <UpcomingView onEdit={setEditing} />}
         {view === 'meetings' && <MeetingsView onEdit={setEditing} />}
+        {view === 'challenge' && <ChallengeView />}
       </main>
 
-      <QuickAdd view={view} />
+      {view !== 'challenge' && <QuickAdd view={view} />}
       <TabBar active={view} onChange={setView} />
 
       {editing && <EditSheet item={editing} onClose={() => setEditing(null)} />}
