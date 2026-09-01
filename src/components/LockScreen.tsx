@@ -45,16 +45,16 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink-900 px-6">
-      <div className="mb-6 grid size-16 place-items-center rounded-2xl bg-ink-800">
-        <svg viewBox="0 0 24 24" className="size-7 text-flow" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <div className="mb-6 grid size-20 place-items-center rounded-3xl bg-ink-800">
+        <svg viewBox="0 0 24 24" className="size-9 text-flow" fill="none" stroke="currentColor" strokeWidth={1.8}>
           <rect x="5" y="11" width="14" height="9" rx="2" />
           <path d="M8 11V8a4 4 0 118 0v3" strokeLinecap="round" />
         </svg>
       </div>
-      <h1 className="mb-1 font-[family-name:var(--font-display)] text-xl font-bold text-mist-100">
+      <h1 className="mb-2 font-[family-name:var(--font-display)] text-2xl font-bold text-mist-100">
         Daily Flow
       </h1>
-      <p className="mb-10 text-sm text-mist-500">
+      <p className={`mb-12 text-base ${error ? 'text-prio-high' : 'text-mist-400'}`}>
         {error ? 'Λάθος PIN' : 'Βάλε το PIN σου'}
       </p>
 
