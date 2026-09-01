@@ -55,13 +55,16 @@ function scheduleReminder(msg: ScheduleMessage): void {
   // setTimeout maxes out around 24.8 days; clamp so it fires correctly.
   const safeDelay = Math.min(Math.max(delay, 0), 2_147_483_647)
 
+  // Resolve icons against the SW scope so they work under any base path.
+  const iconUrl = new URL('icon-192.png', self.registration.scope).href
+
   const timer = setTimeout(() => {
     timers.delete(msg.id)
     void self.registration.showNotification(msg.title, {
       body: msg.body,
       tag: `reminder-${msg.id}`,
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: iconUrl,
+      badge: iconUrl,
     })
     // Recurring reminder (e.g. daily challenge nudge): re-arm for next time.
     if (msg.repeatMs && msg.repeatMs > 0) {
@@ -79,7 +82,7 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
       for (const client of clientList) {
         if ('focus' in client) return client.focus()
       }
-      return self.clients.openWindow('/')
+      return self.clients.openWindow(self.registration.scope)
     }),
   )
 })

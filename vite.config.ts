@@ -3,8 +3,12 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Served from a GitHub Pages project site at https://<user>.github.io/daily-flow/
+const BASE = '/daily-flow/'
+
 // https://vite.dev/config/
 export default defineConfig({
+  base: BASE,
   plugins: [
     react(),
     tailwindcss(),
@@ -25,8 +29,8 @@ export default defineConfig({
         background_color: '#0e0e11',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/',
-        scope: '/',
+        start_url: BASE,
+        scope: BASE,
         icons: [
           {
             src: 'icon-192.png',
