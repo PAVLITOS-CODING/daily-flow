@@ -1,0 +1,100 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Daily Flow — design tokens
+   Warm-ink dark theme, a single chartreuse "flow" accent, priority signalled
+   by a colored vertical rule rather than yet another rounded card.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-ink-900: #0b0b0d;
+  --color-ink-850: #0e0e11;
+  --color-ink-800: #131318;
+  --color-ink-700: #1b1b22;
+  --color-ink-600: #24242d;
+  --color-ink-500: #33333f;
+
+  --color-mist-100: #f3f3f6;
+  --color-mist-300: #c9c9d2;
+  --color-mist-500: #8a8a97;
+  --color-mist-600: #6a6a77;
+
+  --color-flow: #cde86b; /* chartreuse — the app's signature */
+  --color-flow-dim: #9aad4f;
+
+  --color-prio-high: #ff6d57;
+  --color-prio-med: #f4b740;
+  --color-prio-low: #56c2a6;
+
+  --color-ctx-work: #7aa2ff;
+  --color-ctx-personal: #cde86b;
+
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-ink-850);
+  color: var(--color-mist-100);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* iOS: no rubber-band overscroll colour flash, keep the ink ground */
+  overscroll-behavior-y: none;
+}
+
+/* Respect the notch / home indicator when installed to the home screen. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* Hide scrollbars but keep scrolling (mobile-first). */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-rise {
+  animation: rise 0.22s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise {
+    animation: none;
+  }
+}
