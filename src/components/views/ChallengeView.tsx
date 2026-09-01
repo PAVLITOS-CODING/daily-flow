@@ -11,6 +11,12 @@ import {
   newRuleId,
 } from '../../lib/challenge'
 import { useActiveChallenge } from '../../hooks/useChallenge'
+import {
+  loadChallengeReminder,
+  enableChallengeReminder,
+  disableChallengeReminder,
+  isStandalone,
+} from '../../lib/reminders'
 
 export function ChallengeView() {
   const data = useActiveChallenge()
@@ -81,6 +87,9 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
       {/* Progress grid */}
       <DayGrid target={challenge.targetDays} streak={stats.streak} todayComplete={stats.todayComplete} />
 
+      {/* Daily reminder */}
+      <DailyReminderControl title={challenge.title} />
+
       {/* Today checklist */}
       <div className="mt-6 mb-2 flex items-baseline justify-between">
         <h3 className="text-xs tracking-widest text-mist-500 uppercase">Σήμερα</h3>
@@ -121,6 +130,70 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
         Το πρόγραμμα πρέπει να τηρηθεί για {challenge.targetDays} συνεχόμενες μέρες. Αν χάσεις μία
         μέρα, το σερί μηδενίζει και ξεκινάς από την Ημέρα 1.
       </p>
+    </div>
+  )
+}
+
+function DailyReminderControl({ title }: { title: string }) {
+  const initial = loadChallengeReminder()
+  const [on, setOn] = useState(initial.enabled)
+  const [time, setTime] = useState(initial.time)
+  const [hint, setHint] = useState<string | null>(null)
+
+  async function toggle() {
+    if (on) {
+      disableChallengeReminder()
+      setOn(false)
+      setHint(null)
+      return
+    }
+    const state = await enableChallengeReminder(time, title)
+    if (state === 'granted') {
+      setOn(true)
+      setHint(null)
+    } else if (state === 'denied') {
+      setHint('Οι ειδοποιήσεις είναι μπλοκαρισμένες στις Ρυθμίσεις')
+    } else {
+      setHint(isStandalone() ? 'Δεν υποστηρίζεται σε αυτή τη συσκευή' : 'Πρόσθεσε πρώτα στην αρχική οθόνη')
+    }
+  }
+
+  async function changeTime(next: string) {
+    setTime(next)
+    if (on) await enableChallengeReminder(next, title) // re-arm at the new time
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl bg-ink-800/60 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-sm text-mist-200">Ημερήσια υπενθύμιση</p>
+          <p className="text-xs text-mist-600">Ένα nudge για να μη σπάσεις το σερί</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {on && (
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => void changeTime(e.target.value)}
+              aria-label="Ώρα υπενθύμισης"
+              className="rounded-lg bg-ink-700 px-2 py-1 text-sm text-mist-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-flow/50"
+            />
+          )}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={on}
+            onClick={() => void toggle()}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${on ? 'bg-flow' : 'bg-ink-500'}`}
+          >
+            <span
+              className={`absolute top-0.5 size-6 rounded-full bg-white transition-transform ${on ? 'translate-x-5' : 'translate-x-0.5'}`}
+            />
+          </button>
+        </div>
+      </div>
+      {hint && <p className="mt-2 text-xs text-prio-med">{hint}</p>}
     </div>
   )
 }

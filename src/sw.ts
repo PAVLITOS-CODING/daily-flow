@@ -19,6 +19,8 @@ interface ScheduleMessage {
   at: number
   title: string
   body: string
+  /** If set, re-arm the same reminder this many ms after it fires (daily nudge). */
+  repeatMs?: number
 }
 interface CancelMessage {
   kind: 'cancel-reminder'
@@ -61,6 +63,10 @@ function scheduleReminder(msg: ScheduleMessage): void {
       icon: '/icon-192.png',
       badge: '/icon-192.png',
     })
+    // Recurring reminder (e.g. daily challenge nudge): re-arm for next time.
+    if (msg.repeatMs && msg.repeatMs > 0) {
+      scheduleReminder({ ...msg, at: Date.now() + msg.repeatMs })
+    }
   }, safeDelay)
 
   timers.set(msg.id, timer)

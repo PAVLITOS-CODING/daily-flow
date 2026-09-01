@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Item, ViewKind } from './types'
 import { todayISO, relativeLabel } from './lib/dates'
+import { rearmReminders, rearmChallengeReminder } from './lib/reminders'
 import { TabBar } from './components/TabBar'
 import { QuickAdd } from './components/QuickAdd'
 import { EditSheet } from './components/EditSheet'
@@ -19,6 +20,18 @@ const TITLES: Record<ViewKind, string> = {
 export default function App() {
   const [view, setView] = useState<ViewKind>('today')
   const [editing, setEditing] = useState<Item | null>(null)
+
+  // Re-arm best-effort reminder timers whenever the app is opened/foregrounded.
+  useEffect(() => {
+    function rearm() {
+      void rearmReminders()
+      void rearmChallengeReminder()
+    }
+    rearm()
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') rearm()
+    })
+  }, [])
 
   const longDate = new Intl.DateTimeFormat(undefined, {
     weekday: 'long',

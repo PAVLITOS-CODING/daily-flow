@@ -68,9 +68,17 @@ export function QuickAdd({ view, defaultDate }: Props) {
         </button>
       </div>
 
-      {/* Meetings need time + location up front. */}
+      {/* Meetings need date + time + location up front. */}
       {isMeeting && (
-        <div className="mt-1 flex gap-2 pb-0.5">
+        <div className="mt-1 flex flex-wrap items-center gap-2 pb-0.5">
+          <input
+            type="date"
+            value={date}
+            min={todayISO()}
+            onChange={(e) => setDate(e.target.value)}
+            aria-label="Date"
+            className="rounded-lg bg-ink-700 px-2.5 py-1.5 text-sm text-mist-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-flow/50"
+          />
           <input
             type="time"
             value={time}
