@@ -9,6 +9,7 @@ import {
   enableBiometric,
   disableBiometric,
 } from '../lib/lock'
+import { APP_VERSION_LABEL } from '../version'
 
 const PIN_LEN = 4
 
@@ -175,6 +176,8 @@ export function SettingsSheet({ onClose }: { onClose: () => void }) {
             >
               Κλείσιμο
             </button>
+
+            <p className="mt-4 text-center text-xs text-mist-600">Daily Flow · {APP_VERSION_LABEL}</p>
           </>
         )}
       </div>
