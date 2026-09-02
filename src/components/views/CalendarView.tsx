@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react'
 import type { Item } from '../../types'
 import { useAllItems } from '../../hooks/useItems'
 import { toISODate, todayISO, fromISODate, relativeLabel } from '../../lib/dates'
+import { createItem } from '../../lib/store'
 import { ItemRow } from '../ItemRow'
+import { TimeField } from '../Fields'
 import { EmptyState } from '../Shared'
 
 const WEEKDAYS = ['Δε', 'Τρ', 'Τε', 'Πε', 'Πα', 'Σα', 'Κυ']
@@ -126,6 +128,9 @@ export function CalendarView({ onEdit }: { onEdit: (i: Item) => void }) {
           )}
         </div>
 
+        {/* Quick-add a task on the selected day */}
+        <AddOnDay date={selected} />
+
         {selectedItems.length === 0 ? (
           <EmptyState title="Καμία εγγραφή" hint="Δεν υπάρχει τίποτα για αυτή τη μέρα." />
         ) : (
@@ -137,6 +142,59 @@ export function CalendarView({ onEdit }: { onEdit: (i: Item) => void }) {
         )}
       </div>
     </div>
+  )
+}
+
+function AddOnDay({ date }: { date: string }) {
+  const [title, setTitle] = useState('')
+  const [time, setTime] = useState('')
+
+  async function submit() {
+    if (!title.trim()) return
+    await createItem({
+      title: title.trim(),
+      type: 'task',
+      context: 'personal',
+      date,
+      recurring: 'none',
+      done: false,
+      ...(time ? { time } : {}),
+    })
+    setTitle('')
+    setTime('')
+  }
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        void submit()
+      }}
+      className="mb-3 rounded-2xl bg-ink-800/60 p-2.5"
+    >
+      <div className="flex items-center gap-2">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Νέο task αυτή τη μέρα…"
+          className="min-w-0 flex-1 bg-transparent px-1 py-1.5 text-sm text-mist-100 placeholder:text-mist-600 focus:outline-none"
+          enterKeyHint="done"
+        />
+        <button
+          type="submit"
+          disabled={!title.trim()}
+          aria-label="Add"
+          className="grid size-8 shrink-0 place-items-center rounded-full bg-flow text-onaccent transition-opacity disabled:opacity-30"
+        >
+          <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div className="mt-1">
+        <TimeField value={time} onChange={setTime} />
+      </div>
+    </form>
   )
 }
 

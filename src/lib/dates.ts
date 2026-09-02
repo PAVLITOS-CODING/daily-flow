@@ -45,15 +45,12 @@ export function relativeLabel(iso: string): string {
   return new Intl.DateTimeFormat(undefined, opts).format(d)
 }
 
-/** Format HH:mm using the user's locale (e.g. 9:30 AM / 09:30). */
+/** Format HH:mm in 24-hour form (e.g. 14:30). */
 export function formatTime(time: string): string {
   const [h, m] = time.split(':').map(Number)
-  const d = new Date()
-  d.setHours(h ?? 0, m ?? 0, 0, 0)
-  return new Intl.DateTimeFormat(undefined, {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(d)
+  const hh = String(h ?? 0).padStart(2, '0')
+  const mm = String(m ?? 0).padStart(2, '0')
+  return `${hh}:${mm}`
 }
 
 export function isPast(iso: string): boolean {
