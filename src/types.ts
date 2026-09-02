@@ -22,7 +22,7 @@ export interface Item {
 /** Shape used by the quick-add and edit forms (id + createdAt are managed by the db). */
 export type ItemDraft = Omit<Item, 'id' | 'createdAt'>
 
-export type ViewKind = 'today' | 'upcoming' | 'meetings' | 'challenge'
+export type ViewKind = 'today' | 'upcoming' | 'meetings' | 'calendar' | 'challenge'
 
 // --- Challenges (habit streaks, e.g. 75 HARD) ------------------------------
 

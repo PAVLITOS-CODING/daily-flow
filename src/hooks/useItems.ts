@@ -28,6 +28,11 @@ export function useUpcoming(): Item[] | undefined {
   }, [])
 }
 
+/** Every item, for the calendar view (includes done + all dates). */
+export function useAllItems(): Item[] | undefined {
+  return useLiveQuery(() => db.items.toArray(), [])
+}
+
 /** Open meetings from today onward, soonest first. */
 export function useMeetings(): Item[] | undefined {
   return useLiveQuery(async () => {

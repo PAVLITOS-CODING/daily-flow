@@ -11,12 +11,14 @@ import { LockScreen } from './components/LockScreen'
 import { TodayView } from './components/views/TodayView'
 import { UpcomingView } from './components/views/UpcomingView'
 import { MeetingsView } from './components/views/MeetingsView'
+import { CalendarView } from './components/views/CalendarView'
 import { ChallengeView } from './components/views/ChallengeView'
 
 const TITLES: Record<ViewKind, string> = {
   today: 'Today',
   upcoming: 'Upcoming',
   meetings: 'Meetings',
+  calendar: 'Calendar',
   challenge: 'Challenge',
 }
 
@@ -68,7 +70,9 @@ export default function App() {
               ? longDate
               : view === 'challenge'
                 ? 'Μείνε συνεπής'
-                : relativeLabel(todayISO())}
+                : view === 'calendar'
+                  ? 'Όλα τα task σου'
+                  : relativeLabel(todayISO())}
           </p>
           <h1 className="font-[family-name:var(--font-display)] text-3xl font-bold tracking-tight text-mist-100">
             {TITLES[view]}
@@ -91,10 +95,11 @@ export default function App() {
         {view === 'today' && <TodayView onEdit={setEditing} />}
         {view === 'upcoming' && <UpcomingView onEdit={setEditing} />}
         {view === 'meetings' && <MeetingsView onEdit={setEditing} />}
+        {view === 'calendar' && <CalendarView onEdit={setEditing} />}
         {view === 'challenge' && <ChallengeView />}
       </main>
 
-      {view !== 'challenge' && <QuickAdd view={view} />}
+      {view !== 'challenge' && view !== 'calendar' && <QuickAdd view={view} />}
       <TabBar active={view} onChange={setView} />
 
       {editing && <EditSheet item={editing} onClose={() => setEditing(null)} />}
