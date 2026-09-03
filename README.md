@@ -28,12 +28,19 @@ meetings — built as an installable **PWA**. All data lives on the device
 - **Delete** by swiping a row left, or from the editor.
 - **Recurring tasks** — completing a `daily`/`weekly` item auto-creates the
   next instance on the next matching date (de-duplicated).
-- **Local reminders** — Notification API + service worker for timed items.
-  Permission is requested *only* when you switch a reminder on.
+- **Reminders** — fire **30 minutes** before a timed item (`LEAD_MINUTES`).
+  - **Bell toggle** (in-app): Notification API + service worker. Uses the
+    Notification Triggers API where available (Chromium) so it fires with the
+    app closed; elsewhere it's a while-open fallback.
+  - **Add to Calendar** (edit sheet, timed items): exports an `.ics` with a
+    30′ alarm so the device's **native Calendar** owns the reminder. This is
+    the reliable, server-free path on **iOS**, where web notifications can't
+    fire in the background. Nothing leaves the device except into your own
+    Calendar.
 
-  > On iOS, web notifications fire **only** when the app is installed to the
-  > Home Screen and running standalone (iOS 16.4+). The bell hint tells you
-  > when you need to "Add to Home Screen" first.
+  > On iOS, in-app web notifications fire **only** when the app is installed to
+  > the Home Screen and running standalone (iOS 16.4+), and only while it's
+  > open. For reminders that fire with the app closed, use **Add to Calendar**.
 
 - `navigator.storage.persist()` runs at startup to protect data from eviction.
 
