@@ -8,6 +8,7 @@ import {
   toggleRule,
   restartChallenge,
   abandonChallenge,
+  backfillCompletedDays,
   newRuleId,
 } from '../../lib/challenge'
 import { useActiveChallenge } from '../../hooks/useChallenge'
@@ -62,6 +63,21 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
       await abandonChallenge(challenge.id)
     }
   }
+  async function onBackfill() {
+    if (challenge.id == null) return
+    const answer = window.prompt(
+      'Πόσες προηγούμενες μέρες έχεις ήδη ολοκληρώσει; Θα τσεκαριστούν ως ολοκληρωμένες.',
+      '7',
+    )
+    if (answer == null) return
+    const days = Math.floor(Number(answer))
+    if (!Number.isFinite(days) || days < 1) {
+      window.alert('Δώσε έναν έγκυρο αριθμό ημερών.')
+      return
+    }
+    const filled = await backfillCompletedDays(challenge, days)
+    window.alert(`Τσεκαρίστηκαν ${filled} προηγούμενες μέρες. Σήμερα είναι η Ημέρα ${filled + 1}.`)
+  }
 
   return (
     <div className="animate-rise">
@@ -69,7 +85,7 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-mist-100">
           {challenge.title}
         </h2>
-        <ChallengeMenu onRestart={onRestart} onAbandon={onAbandon} />
+        <ChallengeMenu onBackfill={onBackfill} onRestart={onRestart} onAbandon={onAbandon} />
       </div>
 
       {/* Headline stats */}
@@ -223,7 +239,15 @@ function DayGrid({ target, streak, todayComplete }: { target: number; streak: nu
   )
 }
 
-function ChallengeMenu({ onRestart, onAbandon }: { onRestart: () => void; onAbandon: () => void }) {
+function ChallengeMenu({
+  onBackfill,
+  onRestart,
+  onAbandon,
+}: {
+  onBackfill: () => void
+  onRestart: () => void
+  onAbandon: () => void
+}) {
   const [open, setOpen] = useState(false)
   return (
     <div className="relative shrink-0">
@@ -242,7 +266,14 @@ function ChallengeMenu({ onRestart, onAbandon }: { onRestart: () => void; onAban
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-xl border border-ink-600 bg-ink-800 py-1 shadow-xl">
+          <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-xl border border-ink-600 bg-ink-800 py-1 shadow-xl">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onBackfill() }}
+              className="block w-full px-4 py-2.5 text-left text-sm text-mist-200 active:bg-ink-700"
+            >
+              Τσέκαρε προηγούμενες μέρες…
+            </button>
             <button
               type="button"
               onClick={() => { setOpen(false); onRestart() }}
