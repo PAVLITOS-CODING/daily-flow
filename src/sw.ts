@@ -28,47 +28,95 @@ interface CancelMessage {
 }
 type ReminderMessage = ScheduleMessage | CancelMessage
 
-// In-memory timers. A killed SW loses these, so we also re-check on activate
-// against what the page tells us; timers are a best-effort while-alive path.
+// --- Notification Triggers API (Chromium) — ambient types ------------------
+// Lets us hand a timestamp to the OS so the notification fires even when the
+// app and this service worker are closed. Not in the standard DOM lib yet.
+declare class TimestampTrigger {
+  constructor(timestamp: number)
+}
+interface TriggerNotificationOptions extends NotificationOptions {
+  showTrigger?: TimestampTrigger
+}
+interface TriggeredGetOptions {
+  tag?: string
+  includeTriggered?: boolean
+}
+
+const triggersSupported = 'showTrigger' in Notification.prototype
+
+// In-memory timers for the fallback path. A killed SW loses these, so we also
+// re-arm on launch from the page; timers are a best-effort while-alive path.
 const timers = new Map<number, ReturnType<typeof setTimeout>>()
+
+function reminderTag(id: number): string {
+  return `reminder-${id}`
+}
 
 self.addEventListener('message', (event: ExtendableMessageEvent) => {
   const data = event.data as ReminderMessage | undefined
   if (!data || typeof data !== 'object') return
 
   if (data.kind === 'schedule-reminder') {
-    scheduleReminder(data)
+    event.waitUntil(scheduleReminder(data))
   } else if (data.kind === 'cancel-reminder') {
-    const t = timers.get(data.id)
-    if (t) {
-      clearTimeout(t)
-      timers.delete(data.id)
-    }
+    event.waitUntil(cancelReminder(data.id))
   }
 })
 
-function scheduleReminder(msg: ScheduleMessage): void {
-  const existing = timers.get(msg.id)
-  if (existing) clearTimeout(existing)
+async function cancelReminder(id: number): Promise<void> {
+  const t = timers.get(id)
+  if (t) {
+    clearTimeout(t)
+    timers.delete(id)
+  }
+  // Drop any notification the OS is holding for a future trigger.
+  const pending = await self.registration.getNotifications({
+    tag: reminderTag(id),
+    includeTriggered: true,
+  } as TriggeredGetOptions)
+  for (const n of pending) n.close()
+}
 
+function fireOptions(msg: ScheduleMessage): NotificationOptions {
+  // Resolve icons against the SW scope so they work under any base path.
+  const iconUrl = new URL('icon-192.png', self.registration.scope).href
+  return {
+    body: msg.body,
+    tag: reminderTag(msg.id),
+    icon: iconUrl,
+    badge: iconUrl,
+    // Keep it on screen until dismissed; timed reminders are easy to miss.
+    requireInteraction: true,
+  }
+}
+
+async function scheduleReminder(msg: ScheduleMessage): Promise<void> {
+  // Clear whatever is already armed for this id (either path).
+  await cancelReminder(msg.id)
+
+  if (triggersSupported) {
+    // OS-scheduled: fires even if the app / SW is not running.
+    const options: TriggerNotificationOptions = {
+      ...fireOptions(msg),
+      showTrigger: new TimestampTrigger(msg.at),
+    }
+    await self.registration.showNotification(msg.title, options)
+    // A repeating nudge (daily challenge) can't self-perpetuate in the
+    // background with a one-shot trigger; opening the app re-arms the next one.
+    return
+  }
+
+  // Fallback: only fires while this service worker stays alive.
   const delay = msg.at - Date.now()
   // setTimeout maxes out around 24.8 days; clamp so it fires correctly.
   const safeDelay = Math.min(Math.max(delay, 0), 2_147_483_647)
 
-  // Resolve icons against the SW scope so they work under any base path.
-  const iconUrl = new URL('icon-192.png', self.registration.scope).href
-
   const timer = setTimeout(() => {
     timers.delete(msg.id)
-    void self.registration.showNotification(msg.title, {
-      body: msg.body,
-      tag: `reminder-${msg.id}`,
-      icon: iconUrl,
-      badge: iconUrl,
-    })
+    void self.registration.showNotification(msg.title, fireOptions(msg))
     // Recurring reminder (e.g. daily challenge nudge): re-arm for next time.
     if (msg.repeatMs && msg.repeatMs > 0) {
-      scheduleReminder({ ...msg, at: Date.now() + msg.repeatMs })
+      void scheduleReminder({ ...msg, at: Date.now() + msg.repeatMs })
     }
   }, safeDelay)
 

@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Context, Item, ItemType, Priority, Recurring } from '../types'
 import { deleteItem, updateItem } from '../lib/store'
+import { addToCalendar, canAddToCalendar } from '../lib/ics'
+import { LEAD_MINUTES } from '../lib/reminders'
 
 interface Props {
   item: Item
@@ -13,9 +15,13 @@ const RECURS: Recurring[] = ['none', 'daily', 'weekly']
 
 export function EditSheet({ item, onClose }: Props) {
   const [draft, setDraft] = useState<Item>(item)
+  const [calMsg, setCalMsg] = useState<string | null>(null)
 
   // Keep local state in sync if a different item is opened.
-  useEffect(() => setDraft(item), [item])
+  useEffect(() => {
+    setDraft(item)
+    setCalMsg(null)
+  }, [item])
 
   // Close on Escape.
   useEffect(() => {
@@ -48,6 +54,15 @@ export function EditSheet({ item, onClose }: Props) {
     if (draft.id == null) return
     await deleteItem(draft.id)
     onClose()
+  }
+
+  function onAddToCalendar() {
+    const ok = addToCalendar(draft)
+    setCalMsg(
+      ok
+        ? `Άνοιξε το Ημερολόγιο — πάτησε «Προσθήκη». Θα σε ειδοποιήσει ${LEAD_MINUTES}′ πριν.`
+        : 'Δεν ήταν δυνατό το άνοιγμα του ημερολογίου σε αυτόν τον browser.',
+    )
   }
 
   return (
@@ -130,6 +145,24 @@ export function EditSheet({ item, onClose }: Props) {
             />
           </Field>
         </div>
+
+        {canAddToCalendar(draft) && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={onAddToCalendar}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-ink-700 py-3 text-sm font-medium text-mist-200 active:bg-ink-600"
+            >
+              <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={1.8}>
+                <rect x="3" y="4.5" width="18" height="16" rx="2" />
+                <path d="M3 9h18M8 3v3M16 3v3" strokeLinecap="round" />
+                <path d="M12 12.5v4M10 14.5h4" strokeLinecap="round" />
+              </svg>
+              Πρόσθεσε στο Ημερολόγιο · ειδοποίηση {LEAD_MINUTES}′ πριν
+            </button>
+            {calMsg && <p className="mt-2 px-1 text-xs leading-relaxed text-flow-dim">{calMsg}</p>}
+          </div>
+        )}
 
         <div className="mt-5 flex items-center gap-3">
           <button
