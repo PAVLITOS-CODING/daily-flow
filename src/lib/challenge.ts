@@ -34,46 +34,25 @@ export function newRuleId(): string {
   return `c${Date.now().toString(36)}${ruleCounter}`
 }
 
-/**
- * Start a challenge (deactivating any other active one). If the user was
- * already partway through it before using the app, `alreadyCompletedDays`
- * backdates the start and logs each of those days as fully done, so the
- * streak/day-count reflect real progress instead of resetting to zero.
- */
+/** Start a challenge (deactivating any other active one). */
 export async function startChallenge(
   title: string,
   rules: ChallengeRule[],
   targetDays: number,
-  alreadyCompletedDays = 0,
 ): Promise<number> {
-  const completed = Math.max(0, Math.min(Math.floor(alreadyCompletedDays), targetDays - 1))
-  const startDate = addDays(todayISO(), -completed)
-
-  return db.transaction('rw', db.challenges, db.challengeLog, async () => {
+  return db.transaction('rw', db.challenges, async () => {
     // Only one active challenge at a time. `active` is boolean, so filter in JS.
     const actives = await db.challenges.filter((c) => c.active).toArray()
     for (const c of actives) if (c.id != null) await db.challenges.update(c.id, { active: false })
 
-    const id = (await db.challenges.add({
+    return (await db.challenges.add({
       title: title.trim() || 'Challenge',
       rules,
       targetDays,
-      startDate,
+      startDate: todayISO(),
       active: true,
       createdAt: Date.now(),
     })) as number
-
-    if (completed > 0) {
-      const ruleIds = rules.map((r) => r.id)
-      const logs: ChallengeLog[] = Array.from({ length: completed }, (_, i) => ({
-        challengeId: id,
-        date: addDays(startDate, i),
-        doneRuleIds: ruleIds,
-      }))
-      await db.challengeLog.bulkAdd(logs)
-    }
-
-    return id
   })
 }
 
