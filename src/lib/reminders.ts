@@ -8,10 +8,17 @@ import { fromISODate, formatTime } from './dates'
  * Event/meeting reminders fire LEAD_MINUTES before the item's time. A daily
  * challenge nudge can also be scheduled.
  *
+ * Delivery uses the Notification Triggers API (`TimestampTrigger`) when the
+ * browser supports it, which hands the scheduled notification to the OS so it
+ * fires even while the app and its service worker are closed (Chromium: Android
+ * Chrome, desktop Chrome/Edge). Where triggers are unavailable we fall back to a
+ * service-worker `setTimeout`, which only fires while the SW is alive.
+ *
  * iOS note: web notifications only fire when the app is installed to the home
- * screen and running in standalone mode (iOS 16.4+). Because there is no push
- * server (by design — the app is fully local/private), delivery is best-effort:
- * timers live in the service worker, which the OS may suspend. Opening the app
+ * screen and running in standalone mode (iOS 16.4+). iOS Safari does NOT support
+ * Notification Triggers, and there is no push server (by design — the app is
+ * fully local/private), so on iPhone a timed reminder can only fire while the
+ * app is open, or as a catch-up the next time it is opened. Opening the app
  * re-arms everything (`rearmReminders`), so keeping it on the home screen and
  * launching it daily is the most reliable setup. Permission is requested
  * lazily — only when the user turns a reminder on.
@@ -20,7 +27,7 @@ import { fromISODate, formatTime } from './dates'
 export type NotifyState = 'unsupported' | 'default' | 'granted' | 'denied'
 
 /** How long before an event/meeting the reminder fires. */
-export const LEAD_MINUTES = 60
+export const LEAD_MINUTES = 30
 
 const REMINDER_KEY = 'daily-flow:reminders'
 const CHALLENGE_KEY = 'daily-flow:challenge-reminder'
