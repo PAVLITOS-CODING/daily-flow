@@ -71,6 +71,40 @@ export async function toggleRule(
   })
 }
 
+/**
+ * Backfill an already-running streak: mark the `days` days ending yesterday as
+ * fully complete, and move `startDate` back so the day count and consistency
+ * line up. For when you started the challenge before installing the app.
+ * Returns the number of days actually filled.
+ */
+export async function backfillCompletedDays(
+  challenge: Challenge,
+  days: number,
+): Promise<number> {
+  if (challenge.id == null) return 0
+  const id = challenge.id
+  // Never fill more than the whole target, and always keep today for "in progress".
+  const count = Math.max(0, Math.min(Math.floor(days), challenge.targetDays))
+  if (count === 0) return 0
+  const allRuleIds = challenge.rules.map((r) => r.id)
+  const today = todayISO()
+
+  await db.transaction('rw', db.challenges, db.challengeLog, async () => {
+    for (let i = 1; i <= count; i++) {
+      const date = addDays(today, -i)
+      const existing = await db.challengeLog.where({ challengeId: id, date }).first()
+      if (existing?.id != null) {
+        await db.challengeLog.update(existing.id, { doneRuleIds: [...allRuleIds] })
+      } else {
+        await db.challengeLog.add({ challengeId: id, date, doneRuleIds: [...allRuleIds] })
+      }
+    }
+    // Anchor the attempt so elapsed days match the backfilled streak.
+    await db.challenges.update(id, { startDate: addDays(today, -count) })
+  })
+  return count
+}
+
 /** Wipe progress and restart the current attempt from today (day 1). */
 export async function restartChallenge(challengeId: number): Promise<void> {
   await db.transaction('rw', db.challenges, db.challengeLog, async () => {
