@@ -12,10 +12,15 @@ export const SEVENTY_FIVE_HARD_RULES: ChallengeRule[] = [
   { id: 'r6', text: 'Διάβασμα ≥15 σελίδες από βιβλίο' },
   { id: 'r7', text: '1 ώρα μετά το ξύπνημα χωρίς κινητό & 3 ώρες χωρίς content/social' },
   { id: 'r8', text: 'Καμία συσκευή στο κρεβάτι το βράδυ' },
-  { id: 'r9', text: 'Καθημερινό ζύγισμα & φωτογραφία προόδου' },
-  { id: 'r10', text: '≥15′ πνευματικότητα — meditation / προσευχή / journaling' },
   { id: 'r11', text: '15′ ουσιαστική επαφή & συζήτηση με αγαπημένο πρόσωπο' },
 ]
+
+/**
+ * Rule ids dropped from the template after the initial version (the old #9
+ * weigh-in/photo and #10 spirituality rules). Kept here so pruneDroppedRules
+ * can retrofit any challenge/log created before this change.
+ */
+const DROPPED_RULE_IDS = new Set(['r9', 'r10'])
 
 export const SEVENTY_FIVE_HARD = {
   title: '75 HARD Gang Way',
@@ -29,26 +34,97 @@ export function newRuleId(): string {
   return `c${Date.now().toString(36)}${ruleCounter}`
 }
 
-/** Start a challenge (deactivating any other active one). */
+/**
+ * Start a challenge (deactivating any other active one). If the user was
+ * already partway through it before using the app, `alreadyCompletedDays`
+ * backdates the start and logs each of those days as fully done, so the
+ * streak/day-count reflect real progress instead of resetting to zero.
+ */
 export async function startChallenge(
   title: string,
   rules: ChallengeRule[],
   targetDays: number,
+  alreadyCompletedDays = 0,
 ): Promise<number> {
-  return db.transaction('rw', db.challenges, async () => {
+  const completed = Math.max(0, Math.min(Math.floor(alreadyCompletedDays), targetDays - 1))
+  const startDate = addDays(todayISO(), -completed)
+
+  return db.transaction('rw', db.challenges, db.challengeLog, async () => {
     // Only one active challenge at a time. `active` is boolean, so filter in JS.
     const actives = await db.challenges.filter((c) => c.active).toArray()
     for (const c of actives) if (c.id != null) await db.challenges.update(c.id, { active: false })
 
-    return db.challenges.add({
+    const id = (await db.challenges.add({
       title: title.trim() || 'Challenge',
       rules,
       targetDays,
-      startDate: todayISO(),
+      startDate,
       active: true,
       createdAt: Date.now(),
-    }) as Promise<number>
+    })) as number
+
+    if (completed > 0) {
+      const ruleIds = rules.map((r) => r.id)
+      const logs: ChallengeLog[] = Array.from({ length: completed }, (_, i) => ({
+        challengeId: id,
+        date: addDays(startDate, i),
+        doneRuleIds: ruleIds,
+      }))
+      await db.challengeLog.bulkAdd(logs)
+    }
+
+    return id
   })
+}
+
+/**
+ * Retroactively mark `days` days immediately before the challenge's current
+ * start date as fully complete, and push the start date back to cover them.
+ * For when the user already started the challenge for real (in-app or off)
+ * before recording those earlier days.
+ */
+export async function backfillPastDays(challengeId: number, days: number): Promise<void> {
+  const n = Math.max(0, Math.floor(days))
+  if (n === 0) return
+
+  await db.transaction('rw', db.challenges, db.challengeLog, async () => {
+    const challenge = await db.challenges.get(challengeId)
+    if (!challenge) return
+
+    const ruleIds = challenge.rules.map((r) => r.id)
+    const newStart = addDays(challenge.startDate, -n)
+
+    for (let i = 0; i < n; i++) {
+      const date = addDays(newStart, i)
+      const existing = await db.challengeLog.where({ challengeId, date }).first()
+      if (existing) await db.challengeLog.update(existing.id!, { doneRuleIds: ruleIds })
+      else await db.challengeLog.add({ challengeId, date, doneRuleIds: ruleIds })
+    }
+
+    await db.challenges.update(challengeId, { startDate: newStart })
+  })
+}
+
+/**
+ * One-time cleanup for installs that already had the old #9/#10 rules: strip
+ * them from any stored challenge and from every day's log, leaving all other
+ * progress untouched. Safe no-op once nothing references those ids anymore.
+ */
+export async function pruneDroppedRules(): Promise<void> {
+  const challenges = await db.challenges.toArray()
+  for (const c of challenges) {
+    if (c.id == null || !c.rules.some((r) => DROPPED_RULE_IDS.has(r.id))) continue
+
+    await db.challenges.update(c.id, { rules: c.rules.filter((r) => !DROPPED_RULE_IDS.has(r.id)) })
+
+    const logs = await db.challengeLog.where('challengeId').equals(c.id).toArray()
+    for (const log of logs) {
+      if (!log.doneRuleIds.some((id) => DROPPED_RULE_IDS.has(id))) continue
+      await db.challengeLog.update(log.id!, {
+        doneRuleIds: log.doneRuleIds.filter((id) => !DROPPED_RULE_IDS.has(id)),
+      })
+    }
+  }
 }
 
 /** Toggle a single rule for a given day, creating the day's log if needed. */

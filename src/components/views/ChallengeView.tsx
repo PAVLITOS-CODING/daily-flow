@@ -8,6 +8,7 @@ import {
   toggleRule,
   restartChallenge,
   abandonChallenge,
+  backfillPastDays,
   newRuleId,
 } from '../../lib/challenge'
 import { useActiveChallenge } from '../../hooks/useChallenge'
@@ -62,6 +63,14 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
       await abandonChallenge(challenge.id)
     }
   }
+  async function onBackfill() {
+    if (challenge.id == null) return
+    const raw = window.prompt('Πόσες προηγούμενες μέρες έχεις ήδη ολοκληρώσει και θες να τις σημειώσεις;', '7')
+    if (raw === null) return
+    const n = Number(raw)
+    if (!Number.isFinite(n) || n <= 0) return
+    await backfillPastDays(challenge.id, n)
+  }
 
   return (
     <div className="animate-rise">
@@ -69,7 +78,7 @@ function Dashboard({ challenge, logs }: { challenge: Challenge; logs: ChallengeL
         <h2 className="font-[family-name:var(--font-display)] text-xl font-semibold text-mist-100">
           {challenge.title}
         </h2>
-        <ChallengeMenu onRestart={onRestart} onAbandon={onAbandon} />
+        <ChallengeMenu onRestart={onRestart} onAbandon={onAbandon} onBackfill={onBackfill} />
       </div>
 
       {/* Headline stats */}
@@ -223,7 +232,15 @@ function DayGrid({ target, streak, todayComplete }: { target: number; streak: nu
   )
 }
 
-function ChallengeMenu({ onRestart, onAbandon }: { onRestart: () => void; onAbandon: () => void }) {
+function ChallengeMenu({
+  onRestart,
+  onAbandon,
+  onBackfill,
+}: {
+  onRestart: () => void
+  onAbandon: () => void
+  onBackfill: () => void
+}) {
   const [open, setOpen] = useState(false)
   return (
     <div className="relative shrink-0">
@@ -242,7 +259,14 @@ function ChallengeMenu({ onRestart, onAbandon }: { onRestart: () => void; onAban
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-40 overflow-hidden rounded-xl border border-ink-600 bg-ink-800 py-1 shadow-xl">
+          <div className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-ink-600 bg-ink-800 py-1 shadow-xl">
+            <button
+              type="button"
+              onClick={() => { setOpen(false); onBackfill() }}
+              className="block w-full px-4 py-2.5 text-left text-sm text-mist-200 active:bg-ink-700"
+            >
+              Σημείωσε προηγ. μέρες
+            </button>
             <button
               type="button"
               onClick={() => { setOpen(false); onRestart() }}
@@ -268,6 +292,16 @@ function ChallengeMenu({ onRestart, onAbandon }: { onRestart: () => void; onAban
 
 function Chooser() {
   const [custom, setCustom] = useState(false)
+  const [daysDone, setDaysDone] = useState(0)
+
+  async function startFeatured() {
+    await startChallenge(
+      SEVENTY_FIVE_HARD.title,
+      SEVENTY_FIVE_HARD.rules,
+      SEVENTY_FIVE_HARD.targetDays,
+      daysDone,
+    )
+  }
 
   return (
     <div className="animate-rise pt-2">
@@ -275,10 +309,24 @@ function Chooser() {
         Διάλεξε ένα challenge και κράτα σκορ πόσο συνεπής είσαι κάθε μέρα.
       </p>
 
+      {/* Already-in-progress backdate, applies to whichever option you start. */}
+      <div className="mb-4 flex items-center gap-2 rounded-xl bg-ink-800/60 px-3.5 py-2.5">
+        <span className="flex-1 text-sm text-mist-300">Έχεις ήδη ξεκινήσει; Πόσες μέρες;</span>
+        <input
+          type="number"
+          min={0}
+          max={365}
+          value={daysDone}
+          onChange={(e) => setDaysDone(Math.max(0, Math.min(365, Number(e.target.value) || 0)))}
+          aria-label="Ήδη ολοκληρωμένες μέρες"
+          className="w-16 rounded-lg bg-ink-700 px-2 py-1.5 text-center text-sm text-mist-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-flow/50"
+        />
+      </div>
+
       {/* Featured template */}
       <button
         type="button"
-        onClick={() => startChallenge(SEVENTY_FIVE_HARD.title, SEVENTY_FIVE_HARD.rules, SEVENTY_FIVE_HARD.targetDays)}
+        onClick={() => void startFeatured()}
         className="block w-full rounded-2xl border border-flow/30 bg-gradient-to-br from-ink-800 to-ink-850 p-4 text-left active:scale-[0.99]"
       >
         <div className="flex items-center justify-between">
@@ -289,12 +337,13 @@ function Chooser() {
         </div>
         <p className="mt-1 text-xs text-mist-500">
           {SEVENTY_FIVE_HARD.rules.length} κανόνες · {SEVENTY_FIVE_HARD.targetDays} συνεχόμενες μέρες
+          {daysDone > 0 && ` · ξεκινά από την Ημέρα ${daysDone + 1}`}
         </p>
       </button>
 
       <div className="mt-6">
         {custom ? (
-          <CustomBuilder onCancel={() => setCustom(false)} />
+          <CustomBuilder onCancel={() => setCustom(false)} initialDaysDone={daysDone} />
         ) : (
           <button
             type="button"
@@ -309,7 +358,13 @@ function Chooser() {
   )
 }
 
-function CustomBuilder({ onCancel }: { onCancel: () => void }) {
+function CustomBuilder({
+  onCancel,
+  initialDaysDone = 0,
+}: {
+  onCancel: () => void
+  initialDaysDone?: number
+}) {
   const [title, setTitle] = useState('')
   const [days, setDays] = useState(30)
   const [rules, setRules] = useState<ChallengeRule[]>([{ id: newRuleId(), text: '' }])
@@ -329,7 +384,7 @@ function CustomBuilder({ onCancel }: { onCancel: () => void }) {
   async function start() {
     if (!canStart) return
     const clean = rules.filter((r) => r.text.trim()).map((r) => ({ id: r.id, text: r.text.trim() }))
-    await startChallenge(title.trim(), clean, days)
+    await startChallenge(title.trim(), clean, days, initialDaysDone)
   }
 
   return (

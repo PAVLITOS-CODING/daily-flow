@@ -3,6 +3,7 @@ import type { Item, ViewKind } from './types'
 import { todayISO, relativeLabel } from './lib/dates'
 import { rearmReminders, rearmChallengeReminder } from './lib/reminders'
 import { isLockEnabled, RELOCK_GRACE_MS } from './lib/lock'
+import { pruneDroppedRules } from './lib/challenge'
 import { TabBar } from './components/TabBar'
 import { QuickAdd } from './components/QuickAdd'
 import { EditSheet } from './components/EditSheet'
@@ -28,6 +29,12 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [locked, setLocked] = useState(() => isLockEnabled())
   const hiddenAt = useRef<number | null>(null)
+
+  // One-time cleanup for the dropped 75 HARD rules #9/#10 (retrofits any
+  // challenge/logs created before they were removed from the template).
+  useEffect(() => {
+    void pruneDroppedRules()
+  }, [])
 
   // Re-arm best-effort reminder timers, and re-lock after time in the
   // background, whenever the app is opened/foregrounded.
