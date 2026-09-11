@@ -1,35 +1,72 @@
 import { db } from '../db'
 import type { PlanChallenge, PlanTask } from '../types'
 import { fromISODate, todayISO } from './dates'
-import { PLAN_SLUG, PLAN_TITLE, REACT_14_DAYS } from './planData'
+import { PLAN_CONTENT_VERSION, PLAN_SLUG, PLAN_TITLE, REACT_14_DAYS } from './planData'
 
 const DAY_MS = 86_400_000
 
+/** Build the full task list for a plan from the current static content. */
+function buildTasks(challengeId: number): PlanTask[] {
+  const rows: PlanTask[] = []
+  for (const d of REACT_14_DAYS) {
+    for (const t of d.tasks) {
+      rows.push({
+        challengeId,
+        key: t.key,
+        day: d.day,
+        kind: t.kind,
+        title: t.title,
+        detail: t.detail,
+        resources: t.resources,
+        minutes: t.minutes,
+        done: 0,
+      })
+    }
+  }
+  return rows
+}
+
 /**
- * Create the plan and its tasks once. Idempotent (keyed by slug — no-ops if it
- * already exists) and wrapped in a transaction, so it's safe to call on every
- * mount. Returns the plan's id.
+ * Ensure the plan exists and its tasks match the current content. Idempotent
+ * and transactional, so it's safe to call on every mount:
+ *  - first run: creates the plan + tasks;
+ *  - after a content update (PLAN_CONTENT_VERSION bumped): re-seeds the tasks,
+ *    carrying over which steps were already done (matched by their stable key);
+ *  - otherwise: no-ops.
+ * Returns the plan's id.
  */
 export async function seedPlan(): Promise<number> {
   return db.transaction('rw', db.planChallenges, db.planTasks, async () => {
     const existing = await db.planChallenges.where('slug').equals(PLAN_SLUG).first()
-    if (existing?.id != null) return existing.id
 
-    const id = (await db.planChallenges.add({
-      slug: PLAN_SLUG,
-      title: PLAN_TITLE,
-      days: REACT_14_DAYS.length,
-      startDate: todayISO(),
-    })) as number
-
-    const rows: PlanTask[] = []
-    for (const d of REACT_14_DAYS) {
-      for (const t of d.tasks) {
-        rows.push({ challengeId: id, day: d.day, kind: t.kind, title: t.title, minutes: t.minutes, done: 0 })
-      }
+    if (!existing || existing.id == null) {
+      const id = (await db.planChallenges.add({
+        slug: PLAN_SLUG,
+        title: PLAN_TITLE,
+        days: REACT_14_DAYS.length,
+        startDate: todayISO(),
+        contentVersion: PLAN_CONTENT_VERSION,
+      })) as number
+      await db.planTasks.bulkAdd(buildTasks(id))
+      return id
     }
-    await db.planTasks.bulkAdd(rows)
-    return id
+
+    if (existing.contentVersion !== PLAN_CONTENT_VERSION) {
+      const old = await db.planTasks.where('challengeId').equals(existing.id).toArray()
+      const doneKeys = new Set(old.filter((t) => t.done && t.key).map((t) => t.key))
+      await db.planTasks.where('challengeId').equals(existing.id).delete()
+      const rows = buildTasks(existing.id).map((t) =>
+        doneKeys.has(t.key) ? { ...t, done: 1 as const, doneAt: Date.now() } : t,
+      )
+      await db.planTasks.bulkAdd(rows)
+      await db.planChallenges.update(existing.id, {
+        contentVersion: PLAN_CONTENT_VERSION,
+        title: PLAN_TITLE,
+        days: REACT_14_DAYS.length,
+      })
+    }
+
+    return existing.id
   })
 }
 
@@ -43,6 +80,11 @@ export async function togglePlanTask(task: PlanTask): Promise<void> {
 /** Static per-day label (not stored in the schema — see planData.ts). */
 export function dayLabel(day: number): string {
   return REACT_14_DAYS.find((d) => d.day === day)?.label ?? `Ημέρα ${day}`
+}
+
+/** Static per-day focus line (not stored in the schema — see planData.ts). */
+export function dayFocus(day: number): string {
+  return REACT_14_DAYS.find((d) => d.day === day)?.focus ?? ''
 }
 
 /** 1-based day number derived from startDate, clamped to 1..days. */
