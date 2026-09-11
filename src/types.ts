@@ -22,7 +22,7 @@ export interface Item {
 /** Shape used by the quick-add and edit forms (id + createdAt are managed by the db). */
 export type ItemDraft = Omit<Item, 'id' | 'createdAt'>
 
-export type ViewKind = 'today' | 'upcoming' | 'meetings' | 'calendar' | 'challenge'
+export type ViewKind = 'today' | 'upcoming' | 'meetings' | 'calendar' | 'challenge' | 'plan'
 
 // --- Challenges (habit streaks, e.g. 75 HARD) ------------------------------
 
@@ -51,4 +51,40 @@ export interface ChallengeLog {
   /** YYYY-MM-DD */
   date: string
   doneRuleIds: string[]
+}
+
+// --- Learning plans (day-by-day study plan, e.g. React in 14 days) ---------
+// Distinct from the habit Challenge above: a fixed sequence of days, each with
+// a handful of typed tasks. Backed by its own Dexie tables (planChallenges /
+// planTasks) so it never touches the habit-challenge data.
+
+export type PlanTaskKind = 'theory' | 'practice' | 'ship'
+
+export interface PlanChallenge {
+  id?: number
+  /** Stable identifier used to seed idempotently (e.g. 'react-14-days'). */
+  slug: string
+  title: string
+  /** Total number of days in the plan. */
+  days: number
+  /** YYYY-MM-DD the plan started (drives the current-day calculation). */
+  startDate: string
+  /** Epoch ms when archived, if the user ever archives it. */
+  archivedAt?: number
+}
+
+export interface PlanTask {
+  id?: number
+  challengeId: number
+  /** 1..days */
+  day: number
+  kind: PlanTaskKind
+  title: string
+  notes?: string
+  /** Estimated minutes for this task. */
+  minutes: number
+  /** 0 | 1 — IndexedDB can't index booleans, so done is a number. */
+  done: 0 | 1
+  /** Epoch ms when marked done. */
+  doneAt?: number
 }
