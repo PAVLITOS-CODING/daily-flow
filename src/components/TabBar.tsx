@@ -11,6 +11,7 @@ const TABS: { key: ViewKind; label: string; icon: (active: boolean) => React.Rea
   { key: 'meetings', label: 'Meetings', icon: (a) => <PeopleIcon active={a} /> },
   { key: 'calendar', label: 'Calendar', icon: (a) => <CalendarIcon active={a} /> },
   { key: 'challenge', label: 'Challenge', icon: (a) => <FlameIcon active={a} /> },
+  { key: 'plan', label: 'React 14', icon: (a) => <CodeIcon active={a} /> },
 ]
 
 export function TabBar({ active, onChange }: Props) {
@@ -73,6 +74,13 @@ function CalendarIcon({ active }: { active: boolean }) {
     <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}>
       <rect x="3" y="5" width="18" height="16" rx="2" />
       <path d="M3 9h18M8 3v4M16 3v4" strokeLinecap="round" />
+    </svg>
+  )
+}
+function CodeIcon({ active }: { active: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth={active ? 2.2 : 1.8}>
+      <path d="M8 8l-4 4 4 4M16 8l4 4-4 4M13 5l-2 14" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
