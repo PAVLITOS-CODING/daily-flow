@@ -59,6 +59,14 @@ export interface ChallengeLog {
 // planTasks) so it never touches the habit-challenge data.
 
 export type PlanTaskKind = 'theory' | 'practice' | 'ship'
+export type PlanResourceType = 'docs' | 'video' | 'article' | 'practice'
+
+/** A study link shown in a task's "what to read" popup. */
+export interface PlanResource {
+  label: string
+  url: string
+  type: PlanResourceType
+}
 
 export interface PlanChallenge {
   id?: number
@@ -69,6 +77,8 @@ export interface PlanChallenge {
   days: number
   /** YYYY-MM-DD the plan started (drives the current-day calculation). */
   startDate: string
+  /** Seed-content revision (see plan.ts). Lets content upgrade without wiping progress. */
+  contentVersion?: number
   /** Epoch ms when archived, if the user ever archives it. */
   archivedAt?: number
 }
@@ -76,10 +86,16 @@ export interface PlanChallenge {
 export interface PlanTask {
   id?: number
   challengeId: number
+  /** Stable content key ("day-index", e.g. '1-2') so progress survives content edits. */
+  key: string
   /** 1..days */
   day: number
   kind: PlanTaskKind
   title: string
+  /** One friendly sentence: exactly what to do for this step. */
+  detail?: string
+  /** Study links surfaced in the "what to read" popup. */
+  resources?: PlanResource[]
   notes?: string
   /** Estimated minutes for this task. */
   minutes: number
