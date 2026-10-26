@@ -5,6 +5,7 @@ import {
   verifyPin,
   isBiometricEnabled,
   unlockWithBiometric,
+  disableLock,
 } from '../lib/lock'
 
 /** Full-screen gate shown until the correct PIN (or biometric) is entered. */
@@ -43,6 +44,17 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
     }
   }
 
+  function onForgot() {
+    if (
+      window.confirm(
+        'Απενεργοποίηση κλειδώματος με PIN; Τα δεδομένα σου δεν επηρεάζονται — μπορείς να ξαναβάλεις PIN αργότερα από τις Ρυθμίσεις.',
+      )
+    ) {
+      disableLock()
+      onUnlock()
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-ink-900 px-6">
       <div className="mb-6 grid size-20 place-items-center rounded-3xl bg-ink-700">
@@ -69,6 +81,14 @@ export function LockScreen({ onUnlock }: { onUnlock: () => void }) {
         error={error}
         {...(biometric ? { onBiometric: () => void tryBiometric() } : {})}
       />
+
+      <button
+        type="button"
+        onClick={onForgot}
+        className="mt-10 text-sm text-mist-500 underline underline-offset-2 active:text-mist-300"
+      >
+        Ξέχασες το PIN;
+      </button>
     </div>
   )
 }
